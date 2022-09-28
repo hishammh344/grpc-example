@@ -4,8 +4,9 @@ import {
   ServerCredentials,
 } from "@grpc/grpc-js";
 import { loadSync } from "@grpc/proto-loader";
+import { sayHello } from "./functions/sayHello";
+import { sayChat } from "./functions/sayChat";
 var PROTO_PATH = __dirname + "/../../protos/helloworld.proto";
-
 const packageDefinition = loadSync(PROTO_PATH, {
   keepCase: true,
   longs: String,
@@ -16,20 +17,13 @@ const packageDefinition = loadSync(PROTO_PATH, {
 
 const hello_proto = loadPackageDefinition(packageDefinition).helloworld;
 
-const sayHello = (call: any, callback: any) => {
-  for (let i = 0; i < 1000; i++) {
-    call.write({
-      message:
-        (Math.random() + 1).toString(36).substring(7) + call.request.name + i,
-    });
-  }
-  call.end();
-};
-
 const connectGRPC = () => {
   var server = new Server();
   //@ts-ignore
-  server.addService(hello_proto.Greeter.service, { sayHello: sayHello });
+  server.addService(hello_proto.Greeter.service, {
+    sayHello: sayHello,
+    chat: sayChat,
+  });
   server.bindAsync(
     "0.0.0.0:3000",
     ServerCredentials.createInsecure(),

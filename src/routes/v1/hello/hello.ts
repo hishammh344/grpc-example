@@ -1,10 +1,13 @@
 import express from "express";
 import client from "../../../client";
+import { closeClient, getClientChannel } from "@grpc/grpc-js";
 const hello = express.Router();
 
 hello.get("/", (req, resp) => {
-  let array: Array<any> = [];
+  //server streaming
 
+  let array: Array<any> = [];
+  console.log(client.getChannel());
   const call = client.sayHello({ name: "test" });
 
   call.on("data", (response: any) => {
@@ -12,11 +15,42 @@ hello.get("/", (req, resp) => {
     font-family: monospace;">${response.message}</p>`);
   });
   call.on("end", function () {
-    console.log(...array);
     resp.send(
       `<body style=" background-color: #000"><div style="color: #fff; flex:1; display:flex;flex-wrap: wrap;">${array}</div></body>`
     );
   });
+});
+
+hello.get("/chat", (req, resp) => {
+  //bi-directional streaming
+
+  const call = client.chat();
+  call.write({ message: "☑️ establishing connection..." });
+  let i = 0;
+  call.on("data", (response: any) => {
+    if (i > 25) {
+      setTimeout(() => call.write({ message: "terminate" }), 1000);
+    }
+    setTimeout(
+      () => call.write({ message: "⇡ this is from client" + i++ }),
+      1000
+    );
+    console.log(response.message);
+  });
+  call.on("end", () => {
+    console.log("❌ connection terminated");
+  });
+  resp.json("connection established...");
+});
+
+hello.get("/info", (req, resp) => {
+  //channel referenced
+  //close client
+  // closeClient(client);
+  console.log(getClientChannel(client).getChannelzRef());
+  console.log(getClientChannel(client).getConnectivityState(true));
+  //channel
+  resp.json("info");
 });
 
 export default hello;
