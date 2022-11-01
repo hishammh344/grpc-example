@@ -1,5 +1,7 @@
 import connectServer from "./server";
 import connectGRPC from "./grpc";
+import startCronJobs from "@/src/cron";
 
-connectGRPC();
 connectServer();
+connectGRPC();
+startCronJobs();

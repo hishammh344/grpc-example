@@ -1,13 +1,13 @@
 import express from "express";
 import client from "../../../client";
 import { closeClient, getClientChannel } from "@grpc/grpc-js";
-const hello = express.Router();
 
-hello.get("/", (req, resp) => {
+const router = express.Router();
+
+router.get("/", (req, resp) => {
   //server streaming
 
   let array: Array<any> = [];
-  console.log(client.getChannel());
   const call = client.sayHello({ name: "test" });
 
   call.on("data", (response: any) => {
@@ -21,10 +21,11 @@ hello.get("/", (req, resp) => {
   });
 });
 
-hello.get("/chat", (req, resp) => {
+router.get("/chat", (req, resp) => {
   //bi-directional streaming
 
   const call = client.chat();
+
   call.write({ message: "☑️ establishing connection..." });
   let i = 0;
   call.on("data", (response: any) => {
@@ -43,14 +44,21 @@ hello.get("/chat", (req, resp) => {
   resp.json("connection established...");
 });
 
-hello.get("/info", (req, resp) => {
+router.get("/info", (req, resp) => {
   //channel referenced
   //close client
-  // closeClient(client);
-  console.log(getClientChannel(client).getChannelzRef());
-  console.log(getClientChannel(client).getConnectivityState(true));
+
+  const state = getClientChannel(client).getConnectivityState(false);
+  console.log(state);
+
+  // console.log(getClientChannel(client).getTarget());
+
   //channel
   resp.json("info");
 });
 
-export default hello;
+export const hello = {
+  router,
+  permissions: [],
+  requireAuth: false,
+};
